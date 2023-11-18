@@ -1,14 +1,13 @@
 import tkinter as tk
-from newspaper import Article
-import openai
+from goose3 import Goose
+from bardapi import Bard
+import os 
 
-openai.api_key = ''
 
 def get_text(url):
-    article = Article(url)
-    article.download()
-    article.parse()
-    return article.text, article
+    g = Goose()
+    article = g.extract(url)
+    return article.cleaned_text, article
 
 def summarize():
     url = utext.get('1.0', 'end').strip()
@@ -17,19 +16,7 @@ def summarize():
 
     prompt = f"Summarize the following news article:\n{text}"
 
-    # Set up parameters for the OpenAI API call
-    params = {
-        'engine': 'text-davinci-003',
-        'prompt': prompt,
-        'temperature': 0.5,
-        'max_tokens': 150,
-    }
-
-    # Make the API call to ChatGPT
-    response = openai.Completion.create(**params)
-
-    # Extract the generated summary from the API response
-    generated_summary = response['choices'][0]['text']
+    generated_summary = Bard().get_answer(prompt)['content']
 
     title.config(state='normal')
     author.config(state='normal')
@@ -37,13 +24,13 @@ def summarize():
     summary.config(state='normal')
 
     title.delete('1.0', 'end')
-    title.insert('1.0', article.title)
+    title.insert('1.0', article._title)
 
     author.delete('1.0', 'end')
-    author.insert('1.0', article.authors)
+    author.insert('1.0', article._authors)
 
     publishing.delete('1.0', 'end')
-    publishing.insert('1.0', article.publish_date)
+    publishing.insert('1.0', article._publish_date)
 
     summary.delete('1.0', 'end')
     summary.insert('1.0', generated_summary)  # Use a different variable here
@@ -53,6 +40,9 @@ def summarize():
     publishing.config(state='disabled')
     summary.config(state='disabled')
 
+
+api_key = input('Please enter yor Google Bard API Key: ')
+os.environ["_Bard_API_KEY"] = api_key
 
 ##### Tk GUI Setup #####
 
